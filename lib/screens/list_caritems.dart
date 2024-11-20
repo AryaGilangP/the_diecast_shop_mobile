@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:the_diecast_shop_mobile/models/car_items.dart';
 import 'package:the_diecast_shop_mobile/widgets/left_drawer.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class CarEntryPage extends StatefulWidget {
   const CarEntryPage({super.key});
