@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:the_diecast_shop_mobile/widgets/left_drawer.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 class CarEntryFormPage extends StatefulWidget {
   const CarEntryFormPage({super.key});
@@ -18,6 +21,7 @@ class _CarEntryFormPageState extends State<CarEntryFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -167,37 +171,41 @@ class _CarEntryFormPageState extends State<CarEntryFormPage> {
                       backgroundColor: MaterialStateProperty.all(
                           Theme.of(context).colorScheme.primary),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Car entry saved successfully'),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Car Name: $_carName'),
-                                    Text('Price: $_price'),
-                                    Text('Description: $_description'),
-                                    Text('User Reviews: $_userReviews'),
-                                    Text('Ratings: $_ratings'),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    _formKey.currentState!.reset();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
+                        // Kirim ke Django dan tunggu respons
+                        final response = await request.postJson(
+                          "http://[URL_APP_KAMU]/create-car-flutter/",
+                          jsonEncode(<String, String>{
+                            'name': _carName,
+                            'price': _price.toString(),
+                            'description': _description,
+                            'user_reviews': _userReviews,
+                            'ratings': _ratings.toString(),
+                          }),
                         );
+
+                        if (context.mounted) {
+                          if (response['status'] == 'success') {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Car item berhasil disimpan!"),
+                              ),
+                            );
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const MyHomePage()),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    "Terdapat kesalahan, silakan coba lagi."),
+                              ),
+                            );
+                          }
+                        }
                       }
                     },
                     child: const Text(
