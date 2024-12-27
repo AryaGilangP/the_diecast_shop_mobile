@@ -27,7 +27,7 @@ class LeftDrawer extends StatelessWidget {
                 ),
                 Padding(padding: EdgeInsets.all(8)),
                 Text(
-                  "Temukan koleksi diecast terbaik Anda di sini!",
+                  "Kepuasan bagi Anda adalah prioritas bagi Kami",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,

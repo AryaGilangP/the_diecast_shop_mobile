@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:the_diecast_shop_mobile/widgets/left_drawer.dart';
 import 'package:the_diecast_shop_mobile/screens/carentry_form.dart';
+import 'package:the_diecast_shop_mobile/screens/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 class MyHomePage extends StatelessWidget {
-  final String npm = '2306221970'; // NPM
-  final String name = 'Arya Gilang Prasetya'; // Nama
-  final String className = 'PBP F'; // Kelas
-  
+  final String npm = '2306221970';
+  final String name = 'Arya Gilang Prasetya';
+  final String className = 'PBP F';
+
   MyHomePage({super.key});
 
   final List<ItemHomepage> items = [
@@ -20,14 +23,14 @@ class MyHomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'The Diecast Shop',
+          'Fufufafa Shop Mobile',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color.fromARGB(133, 100, 165, 235)),
       ),
       drawer: const LeftDrawer(),
       body: Padding(
@@ -122,12 +125,12 @@ class CarCard extends StatelessWidget {
     switch (item.name) {
       case "View Cars":
         return Colors.yellow;
-      case "=":
+      case "Add Car":
         return Colors.blue;
       case "Logout":
         return Colors.red;
       default:
-        return Colors.grey;
+        return Colors.blueGrey;
     }
   }
 
@@ -137,17 +140,42 @@ class CarCard extends StatelessWidget {
       color: _getItemColor(),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text("You pressed the ${item.name} button!")),
-            );
-          if (item.name == "Add Car") {
+        onTap: () async {
+          if (item.name == "Logout") {
+            final request = context.read<CookieRequest>();
+            try {
+              final response = await request.logout(
+                "http://localhost:8000/auth/logout/",
+              );
+
+              if (response['status']) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("${response['message']} Logout berhasil."),
+                ));
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  (route) => false,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(response['message'] ?? "Gagal logout."),
+                ));
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("Terjadi kesalahan: $e"),
+              ));
+            }
+          } else if (item.name == "Add Car") {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CarEntryFormPage()),
             );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text("You pressed the ${item.name} button!"),
+            ));
           }
         },
         child: Container(
@@ -156,12 +184,8 @@ class CarCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  item.icon,
-                  color: Colors.white,
-                  size: 30.0,
-                ),
-                const Padding(padding: EdgeInsets.all(3)),
+                Icon(item.icon, color: Colors.white, size: 30.0),
+                const SizedBox(height: 4),
                 Text(
                   item.name,
                   textAlign: TextAlign.center,

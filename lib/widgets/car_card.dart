@@ -23,32 +23,42 @@ class CarCard extends StatelessWidget {
               content: Text("Kamu telah menekan tombol ${car.fields.name}!"),
             ));
 
-          // Tambahkan opsi untuk logout
-          if (car.fields.name == "Logout") {
-            final response = await request.logout(
-              "http://localhost:8000/auth/logout/"
-            );
+if (car.fields.name == "Logout") {
+  debugPrint("Logout button pressed"); // Debug
+  try {
+    final response = await request.logout(
+      "http://localhost:8000/auth/logout/",
+    );
 
-            String message = response["message"];
-            if (context.mounted) {
-              if (response['status']) {
-                String uname = response["username"];
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text("$message Sampai jumpa, $uname."),
-                ));
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(message),
-                  ),
-                );
-              }
-            }
-          }
+    debugPrint("Logout response: $response"); // Debug
+    if (response['status']) {
+      debugPrint("Logout successful"); // Debug
+      String uname = response["username"] ?? "User";
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("${response["message"]} Sampai jumpa, $uname."),
+      ));
+
+      if (context.mounted) {
+        debugPrint("Navigating to LoginPage"); // Debug
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } else {
+      debugPrint("Logout failed: ${response["message"]}"); // Debug
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(response["message"] ?? "Gagal logout. Coba lagi."),
+      ));
+    }
+  } catch (e) {
+    debugPrint("Logout exception: $e"); // Debug
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Terjadi kesalahan saat logout: $e"),
+    ));
+  }
+}
         },
         child: Container(
           padding: const EdgeInsets.all(8),
@@ -57,7 +67,6 @@ class CarCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Display car image if available
                 car.fields.imageUrl.isNotEmpty
                     ? Image.network(
                         car.fields.imageUrl,

@@ -18,15 +18,16 @@ class MyApp extends StatelessWidget {
         return request; // Menggunakan request sebagai provider
       },
       child: MaterialApp(
-        title: 'Mental Health Tracker',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSwatch(
-            primarySwatch: Colors.deepPurple,
-          ).copyWith(secondary: Colors.deepPurple[400]),
-        ),
-        home: MyHomePage(),
-      ),
+  title: 'Fufufafa Shop',
+  theme: ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSwatch(
+      primarySwatch: Colors.red, // Ganti menjadi warna merah
+    ).copyWith(secondary: const Color.fromARGB(255, 0, 0, 0)), // Warna aksen juga merah
+  ),
+  home: MyHomePage(),
+),
+
     );
   }
 }

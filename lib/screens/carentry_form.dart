@@ -15,10 +15,12 @@ class CarEntryFormPage extends StatefulWidget {
 class _CarEntryFormPageState extends State<CarEntryFormPage> {
   final _formKey = GlobalKey<FormState>();
   String _carName = "";
+  String _modelNumber = "";
   int _price = 0;
   String _description = "";
   String _userReviews = "";
   int _ratings = 0;
+  String _imageUrl = "";
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class _CarEntryFormPageState extends State<CarEntryFormPage> {
       appBar: AppBar(
         title: const Center(
           child: Text(
-            'Form Tambah Mobil Kamu Hari Ini',
+            'Add Your Diecast Today!',
           ),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -67,6 +69,29 @@ class _CarEntryFormPageState extends State<CarEntryFormPage> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
                   decoration: InputDecoration(
+                    hintText: "Model Number",
+                    labelText: "Model Number",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                  ),
+                  onChanged: (String? value) {
+                    setState(() {
+                      _modelNumber = value!;
+                    });
+                  },
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return "Model number cannot be empty!";
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  decoration: InputDecoration(
                     hintText: "Price",
                     labelText: "Price",
                     border: OutlineInputBorder(
@@ -83,8 +108,12 @@ class _CarEntryFormPageState extends State<CarEntryFormPage> {
                     if (value == null || value.isEmpty) {
                       return "Price cannot be empty!";
                     }
-                    if (int.tryParse(value) == null) {
+                    final intValue = int.tryParse(value);
+                    if (intValue == null) {
                       return "Price must be a number!";
+                    }
+                    if (intValue <= 0) {
+                      return "Price must be greater than zero!";
                     }
                     return null;
                   },
@@ -163,49 +192,86 @@ class _CarEntryFormPageState extends State<CarEntryFormPage> {
                   },
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    hintText: "Image URL",
+                    labelText: "Image URL",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                  ),
+                  onChanged: (String? value) {
+                    setState(() {
+                      _imageUrl = value!;
+                    });
+                  },
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return "Image URL cannot be empty!";
+                    }
+                    if (!Uri.parse(value).isAbsolute) {
+                      return "Please enter a valid URL!";
+                    }
+                    return null;
+                  },
+                ),
+              ),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(
-                          Theme.of(context).colorScheme.primary),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // Kirim ke Django dan tunggu respons
-                        final response = await request.postJson(
-                          "http://[URL_APP_KAMU]/create-car-flutter/",
-                          jsonEncode(<String, String>{
-                            'name': _carName,
-                            'price': _price.toString(),
-                            'description': _description,
-                            'user_reviews': _userReviews,
-                            'ratings': _ratings.toString(),
-                          }),
-                        );
+                        final requestData = <String, dynamic>{
+                          'name': _carName,
+                          'model_number': _modelNumber,
+                          'price': _price,
+                          'description': _description,
+                          'user_reviews': _userReviews,
+                          'ratings': _ratings,
+                          'image_url': _imageUrl,
+                        };
 
-                        if (context.mounted) {
-                          if (response['status'] == 'success') {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Car item berhasil disimpan!"),
-                              ),
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => MyHomePage()),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    "Terdapat kesalahan, silakan coba lagi."),
-                              ),
-                            );
+                        debugPrint("Request Data: $requestData");
+
+                        try {
+                          final response = await request.postJson(
+                            "http://10.0.2.2:8000/create-car-flutter/",
+                            jsonEncode(requestData),
+                          );
+
+                          debugPrint("Response: $response");
+
+                          if (context.mounted) {
+                            if (response['status'] == 'success') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Car item berhasil disimpan!"),
+                                ),
+                              );
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => MyHomePage()),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(response['message'] ?? "Terdapat kesalahan, silakan coba lagi."),
+                                ),
+                              );
+                            }
                           }
+                        } catch (e) {
+                          debugPrint("Error: $e");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Terjadi kesalahan jaringan, coba lagi.")),
+                          );
                         }
                       }
                     },
